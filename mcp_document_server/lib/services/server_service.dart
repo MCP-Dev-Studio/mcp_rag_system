@@ -151,7 +151,7 @@ class ServerService {
       _log('Plugins registered with LLM server');
 
       // 9. Register plugin tools with the server
-      await llmServer.registerPluginsWithServer(targetServer: mcpServer);
+      //await llmServer.registerPluginsWithServer(targetServer: mcpServer);
       _log('Plugins registered with MCP server');
 
       // 10. Configure transport layer
