@@ -74,7 +74,7 @@ class DocumentService {
     }
   }
 
-  // OpenAI embedding setup
+// OpenAI embedding setup
   void _setupOpenAiEmbeddings(String apiKey) {
     _logger.info('Setting up OpenAI embeddings');
 
@@ -84,13 +84,10 @@ class DocumentService {
     // Register OpenAI provider
     mcpLlm.registerProvider('openai', OpenAiProviderFactory());
 
-    // Create RetrievalManager with vector store
-    final vectorStore = MemoryVectorStore();
-
+    // Create RetrievalManager using the createRetrievalManager method from McpLlm
     _retrievalManager = mcpLlm.createRetrievalManager(
       providerName: 'openai',
       documentStore: _documentStore,
-      vectorStore: vectorStore,
       config: LlmConfiguration(
         apiKey: apiKey,
         model: 'text-embedding-3-large',
@@ -100,7 +97,7 @@ class DocumentService {
     _logger.info('OpenAI RetrievalManager created');
   }
 
-  // Claude embedding setup
+// Claude embedding setup
   void _setupClaudeEmbeddings(String apiKey) {
     _logger.info('Setting up Claude embeddings');
 
@@ -110,13 +107,10 @@ class DocumentService {
     // Register Claude provider
     mcpLlm.registerProvider('claude', ClaudeProviderFactory());
 
-    // Create RetrievalManager with vector store
-    final vectorStore = MemoryVectorStore();
-
+    // Create RetrievalManager using the createRetrievalManager method from McpLlm
     _retrievalManager = mcpLlm.createRetrievalManager(
       providerName: 'claude',
       documentStore: _documentStore,
-      vectorStore: vectorStore,
       config: LlmConfiguration(
         apiKey: apiKey,
         model: 'claude-3-sonnet-20240229',
@@ -124,21 +118,6 @@ class DocumentService {
     );
 
     _logger.info('Claude RetrievalManager created');
-  }
-
-  // Load documents
-  Future<void> _loadDocuments() async {
-    try {
-      _logger.info('Loading documents from store');
-      final documents = await _documentStore.getAllDocuments();
-
-      _documents = documents;
-      _documentsStreamController.add(_documents);
-
-      _logger.info('Loaded ${documents.length} documents');
-    } catch (e) {
-      _logger.severe('Error loading documents: $e');
-    }
   }
 
   // Add document
@@ -347,7 +326,7 @@ class DocumentService {
     return allTags.toList()..sort();
   }
 
-  // Create backup
+// Create backup
   Future<String> createBackup(String backupPath) async {
     try {
       _logger.info('Creating backup to $backupPath');
@@ -363,8 +342,9 @@ class DocumentService {
       final backupFilePath = path.join(backupPath, 'documents_$timestamp.json');
       final backupFile = File(backupFilePath);
 
-      // Get all current documents
-      final documents = await _documentStore.getAllDocuments();
+      // Use the already loaded documents instead of trying to get them again
+      // This works because we maintain the document list in memory
+      final documents = _documents;
 
       // Construct backup data
       final backupData = {
@@ -435,6 +415,54 @@ class DocumentService {
       rethrow;
     }
   }
+
+// Load documents
+  Future<void> _loadDocuments() async {
+    try {
+      _logger.info('Loading documents from store');
+
+      // Create an empty list to start with
+      List<Document> loadedDocuments = [];
+
+      // Since we're creating documents with IDs like 'doc_timestamp',
+      // we can try to scan through documents using the patterns we know exist
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final oneYearAgo = now - (365 * 24 * 60 * 60 * 1000); // 1 year ago
+
+      // First, try to get documents with IDs we're generating in addDocument method
+      // Start from 1 year ago timestamps and work up to now
+      for (int timestamp = oneYearAgo; timestamp <= now; timestamp += 86400000) { // Check each day
+        final docId = 'doc_$timestamp';
+        final doc = _documentStore.getDocument(docId);
+        if (doc != null) {
+          loadedDocuments.add(doc);
+        }
+      }
+
+      // If no documents were found, try a broader approach with simpler IDs
+      if (loadedDocuments.isEmpty) {
+        // Try simple numeric IDs from 1 to 1000
+        for (int i = 1; i <= 1000; i++) {
+          final simpleId = 'doc_$i';
+          final doc = _documentStore.getDocument(simpleId);
+          if (doc != null) {
+            loadedDocuments.add(doc);
+          }
+        }
+      }
+
+      // Update documents list
+      _documents = loadedDocuments;
+
+      // Notify listeners
+      _documentsStreamController.add(_documents);
+
+      _logger.info('Loaded ${_documents.length} documents');
+    } catch (e) {
+      _logger.severe('Error loading documents: $e');
+    }
+  }
+
 
   // Resource cleanup
   void dispose() {

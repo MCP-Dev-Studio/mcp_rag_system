@@ -166,7 +166,6 @@ class ServerService {
         authToken: authToken,
       );
       _log('Transport created on port $port');
-
       // 11. Set up session connection handlers
       mcpServer.onNotification('session/connected', (params) {
         final sessionId = params['sessionId'] as String;
