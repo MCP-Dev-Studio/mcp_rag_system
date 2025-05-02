@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 
-// Import mcp_server and mcp_llm packages
+// Import MCP server and MCP LLM packages
 import 'package:mcp_server/mcp_server.dart' hide Logger;
 import 'package:mcp_llm/mcp_llm.dart' hide Logger;
 
@@ -90,6 +91,7 @@ class ServerService {
       // 2. Initialize DocumentService
       _documentService = DocumentService(dataDir.path);
       await _documentService!.initialize();
+      _log('Document service initialized');
 
       // 3. Create MCP server
       final mcpServer = McpServer.createServer(
@@ -105,6 +107,7 @@ class ServerService {
           sampling: true,
         ),
       );
+      _log('MCP server created');
 
       // 4. Initialize LLM
       final McpLlm mcpLlm = McpLlm();
@@ -123,31 +126,36 @@ class ServerService {
       // 5. Create LLM server
       final providerName = openAiApiKey != null && openAiApiKey.isNotEmpty ? 'openai' : 'claude';
       final apiKey = providerName == 'openai' ? openAiApiKey : claudeApiKey;
+      final modelName = providerName == 'openai' ? 'gpt-4o' : 'claude-3-sonnet-20240229';
 
       final llmServer = await mcpLlm.createServer(
         providerName: providerName,
         config: LlmConfiguration(
           apiKey: apiKey!,
-          model: providerName == 'openai' ? 'gpt-4o' : 'claude-3-sonnet-20240229',
+          model: modelName,
         ),
       );
+      _log('LLM server created with $providerName provider using $modelName model');
 
       // 6. Connect LlmServer with MCP server
       llmServer.addMcpServer('main', mcpServer);
+      _log('LLM server connected to MCP server');
 
       // 7. Create plugins
       _documentPlugin = DocumentPlugin(documentService: _documentService!);
       _searchPlugin = SearchPlugin(documentService: _documentService!);
       _resourcePlugin = ResourcePlugin();
+      _log('Plugins created');
 
       // 8. Register plugins
       await llmServer.pluginManager.registerPlugin(_documentPlugin!);
       await llmServer.pluginManager.registerPlugin(_searchPlugin!);
       await llmServer.pluginManager.registerPlugin(_resourcePlugin!);
+      _log('Plugins registered with LLM server');
 
       // 9. Register plugin tools with the server
       await llmServer.registerPluginsWithServer(targetServer: mcpServer);
-      _log('Plugins registered with server');
+      _log('Plugins registered with MCP server');
 
       // 10. Configure transport layer
       final port = int.tryParse(dotenv.env['SERVER_PORT'] ?? '8999') ?? 8999;
@@ -160,21 +168,24 @@ class ServerService {
         fallbackPorts: [port + 1, port + 2],
         authToken: authToken,
       );
+      _log('Transport created on port $port');
 
-      // 11. Monitor sessions
-      mcpServer.onSessionConnected = (sessionId) {
+      // 11. Set up session connection handlers
+      mcpServer.onNotification('session/connected', (params) {
+        final sessionId = params['sessionId'] as String;
         _connectedClients++;
         _sessionIds.add(sessionId);
         _log('Client connected: $sessionId');
         _updateStatus();
-      };
+      });
 
-      mcpServer.onSessionDisconnected = (sessionId) {
+      mcpServer.onNotification('session/disconnected', (params) {
+        final sessionId = params['sessionId'] as String;
         _connectedClients--;
         _sessionIds.remove(sessionId);
         _log('Client disconnected: $sessionId');
         _updateStatus();
-      };
+      });
 
       // 12. Set up performance monitoring timer
       _metricsTimer = Timer.periodic(const Duration(seconds: 5), (_) {
@@ -193,17 +204,20 @@ class ServerService {
       _updateStatus();
 
       // Log server start details
-      final serverHealth = mcpServer.getHealth();
-      final registeredTools = (await mcpServer.getTools()).map((t) => t.name).join(', ');
-      final registeredResources = (await mcpServer.getResources()).map((r) => r.name).join(', ');
+      final health = mcpServer.getHealth();
+      final tools = mcpServer.getTools();
+      final resources = mcpServer.getResources();
+
+      final registeredTools = tools.map((t) => t.name).join(', ');
+      final registeredResources = resources.map((r) => r.name).join(', ');
 
       _log('Server started successfully:');
       _log('- Port: $port');
       _log('- Authentication: ${authToken != null ? 'Enabled' : 'Disabled'}');
       _log('- Registered tools: $registeredTools');
       _log('- Registered resources: $registeredResources');
-      _log('- Tools count: ${serverHealth.registeredTools}');
-      _log('- Resources count: ${serverHealth.registeredResources}');
+      _log('- Tools count: ${health.registeredTools}');
+      _log('- Resources count: ${health.registeredResources}');
 
       return true;
     } catch (e, stackTrace) {
@@ -230,6 +244,10 @@ class ServerService {
 
       // Disconnect server
       _mcpServer!.disconnect();
+
+      // Clean up document service
+      _documentService?.dispose();
+      _documentService = null;
 
       // Update status
       _isRunning = false;

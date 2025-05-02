@@ -1,17 +1,21 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:logging/logging.dart';
+import 'package:mcp_llm/mcp_llm.dart' hide Logger;
 
-import '../services/server_service.dart';
-import '../services/document_service.dart';
+// Local imports
 import 'document_list_screen.dart';
 import 'settings_screen.dart';
 import 'document_details.dart';
 import '../widgets/server_status_bar.dart';
 import '../widgets/log_console.dart';
 import '../widgets/document_card.dart';
+
+// Global service instance
+import '../main.dart' show serverService;
 
 class ServerHome extends StatefulWidget {
   const ServerHome({Key? key}) : super(key: key);
@@ -222,42 +226,42 @@ class _ServerHomeState extends State<ServerHome> with SingleTickerProviderStateM
     bool? result2 = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Document Details'),
+        title: const Text('Document Details'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('File: ${file.name}', style: TextStyle(fontStyle: FontStyle.italic)),
-              SizedBox(height: 16),
+              Text('File: ${file.name}', style: const TextStyle(fontStyle: FontStyle.italic)),
+              const SizedBox(height: 16),
               TextField(
                 controller: titleController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Title',
                   border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextField(
                 controller: authorController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Author',
                   border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextField(
                 controller: tagsController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Tags (comma separated)',
                   hintText: 'e.g. tutorial, reference, important',
                   border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(height: 16),
-              Text('Content Preview:'),
+              const SizedBox(height: 16),
+              const Text('Content Preview:'),
               Container(
                 height: 100,
-                padding: EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.grey),
                   borderRadius: BorderRadius.circular(4),
@@ -265,7 +269,7 @@ class _ServerHomeState extends State<ServerHome> with SingleTickerProviderStateM
                 child: SingleChildScrollView(
                   child: Text(
                     content.length > 500 ? content.substring(0, 500) + '...' : content,
-                    style: TextStyle(fontFamily: 'monospace', fontSize: 12),
+                    style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
                   ),
                 ),
               ),
@@ -275,11 +279,11 @@ class _ServerHomeState extends State<ServerHome> with SingleTickerProviderStateM
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text('Upload'),
+            child: const Text('Upload'),
           ),
         ],
       ),
@@ -299,7 +303,7 @@ class _ServerHomeState extends State<ServerHome> with SingleTickerProviderStateM
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Center(
+      builder: (context) => const Center(
         child: CircularProgressIndicator(),
       ),
     );
@@ -359,7 +363,7 @@ class _ServerHomeState extends State<ServerHome> with SingleTickerProviderStateM
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Center(
+      builder: (context) => const Center(
         child: CircularProgressIndicator(),
       ),
     );
@@ -465,7 +469,7 @@ final resourceResult = await client.readResource('docs://guide');
 ## 6. Handle notifications and events
 ```dart
 client.onResourceUpdated((uri) {
-  print('Resource updated: $uri');
+  print('Resource updated: \$uri');
 });
 
 client.onToolsListChanged(() {
@@ -522,7 +526,7 @@ client.disconnect();
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => SettingsScreen()),
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
               );
             },
           ),
@@ -554,7 +558,7 @@ client.disconnect();
                 _buildDashboardTab(),
 
                 // Documents tab
-                _buildDocumentsTab(),
+                const DocumentListScreen(),
 
                 // Logs tab
                 LogConsole(
@@ -634,7 +638,7 @@ client.disconnect();
                             ? () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => DocumentListScreen(),
+                            builder: (context) => const DocumentListScreen(),
                           ),
                         )
                             : null,
@@ -686,10 +690,4 @@ client.disconnect();
       ),
     );
   }
-
-  // Build documents tab
-  Widget _buildDocumentsTab() {
-    return DocumentListScreen();
-  }
 }
-`

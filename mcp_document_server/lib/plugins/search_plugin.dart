@@ -1,14 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:logging/logging.dart';
-import 'package:mcp_llm/mcp_llm.dart';
+import 'package:mcp_llm/mcp_llm.dart' hide Logger;
 
 import '../services/document_service.dart';
 
-/// Provides search and RAG functionality as an MCP_LLM plugin.
-///
-/// This plugin offers features such as document search, summarization, and Q&A.
-/// It is automatically registered as an MCP tool and accessible from the LLM.
+/// Search and RAG functionality plugin for MCP
 class SearchPlugin extends BaseToolPlugin {
   // Dependencies
   final DocumentService documentService;
@@ -18,6 +16,7 @@ class SearchPlugin extends BaseToolPlugin {
   final Map<String, dynamic> _queryCache = {};
   final Duration _cacheDuration = Duration(minutes: 30);
   final Map<String, DateTime> _cacheTimestamps = {};
+  final int _maxCacheSize = 100;
 
   // Constructor
   SearchPlugin({
@@ -159,7 +158,7 @@ class SearchPlugin extends BaseToolPlugin {
     }
   }
 
-  /// Document search tool
+  // Document search tool
   Future<LlmCallToolResult> _searchDocuments(Map<String, dynamic> arguments) async {
     final query = arguments['query'] as String;
     final topK = arguments['topK'] as int? ?? 5;
@@ -230,7 +229,7 @@ class SearchPlugin extends BaseToolPlugin {
     ]);
   }
 
-  /// Document summarization tool
+  // Document summarization tool
   Future<LlmCallToolResult> _summarizeDocuments(Map<String, dynamic> arguments) async {
     final query = arguments['query'] as String;
     final topK = arguments['topK'] as int? ?? 5;
@@ -295,7 +294,7 @@ class SearchPlugin extends BaseToolPlugin {
     }
   }
 
-  /// Question answering tool
+  // Question answering tool
   Future<LlmCallToolResult> _questionAnswering(Map<String, dynamic> arguments) async {
     final question = arguments['question'] as String;
     final topK = arguments['topK'] as int? ?? 5;
@@ -350,7 +349,7 @@ class SearchPlugin extends BaseToolPlugin {
     }
   }
 
-  /// Find related documents tool
+  // Find related documents tool
   Future<LlmCallToolResult> _findRelatedDocuments(Map<String, dynamic> arguments) async {
     final documentId = arguments['documentId'] as String;
     final topK = arguments['topK'] as int? ?? 3;
@@ -385,7 +384,7 @@ class SearchPlugin extends BaseToolPlugin {
     try {
       // Use the content of the document as the query
       final results = await retrievalManager.retrieveRelevant(
-        document.title + ' ' + document.content.substring(0, Math.min(document.content.length, 200)),
+        document.title + ' ' + document.content.substring(0, math.min(document.content.length, 200)),
         topK: topK + 1, // Retrieve one extra to exclude itself
         minimumScore: 0.6,
       );
@@ -441,9 +440,11 @@ class SearchPlugin extends BaseToolPlugin {
     }
   }
 
-  /// Clean expired cache entries
+  // Clean expired cache entries
   void _cleanExpiredCache() {
     final now = DateTime.now();
+
+    // Remove expired entries
     final expiredKeys = _cacheTimestamps.entries
         .where((entry) => now.difference(entry.value) > _cacheDuration)
         .map((entry) => entry.key)
@@ -454,19 +455,36 @@ class SearchPlugin extends BaseToolPlugin {
       _cacheTimestamps.remove(key);
     }
 
+    // If cache is still too large, remove oldest entries
+    if (_cacheTimestamps.length > _maxCacheSize) {
+      final oldestKeys = _cacheTimestamps.entries
+          .toList()
+        ..sort((a, b) => a.value.compareTo(b.value));
+
+      final keysToRemove = oldestKeys
+          .take(_cacheTimestamps.length - _maxCacheSize)
+          .map((entry) => entry.key)
+          .toList();
+
+      for (final key in keysToRemove) {
+        _queryCache.remove(key);
+        _cacheTimestamps.remove(key);
+      }
+    }
+
     if (expiredKeys.isNotEmpty) {
       _logger.info('Cleaned ${expiredKeys.length} expired cache entries');
     }
   }
 
-  /// Invalidate all cache
+  // Invalidate all cache
   void invalidateCache() {
     _queryCache.clear();
     _cacheTimestamps.clear();
     _logger.info('Cache invalidated');
   }
 
-  /// Invalidate cache for a specific query
+  // Invalidate cache for a specific query
   void invalidateCacheForQuery(String query) {
     final keysToRemove = _queryCache.keys
         .where((key) => key.contains(query))

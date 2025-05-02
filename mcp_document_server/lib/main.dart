@@ -9,7 +9,6 @@ import 'screens/server_home.dart';
 
 // Global service instances
 late ServerService serverService;
-late DocumentService documentService;
 
 void main() async {
   // Initialize Flutter
@@ -25,7 +24,7 @@ void main() async {
   serverService = ServerService();
 
   // Run the UI
-  runApp(const MyCPDocumentServerApp());
+  runApp(const MCPDocumentServerApp());
 }
 
 void _setupLogging() {
@@ -66,8 +65,8 @@ Level _getLogLevel(String levelName) {
   }
 }
 
-class MyCPDocumentServerApp extends StatelessWidget {
-  const MyCPDocumentServerApp({Key? key}) : super(key: key);
+class MCPDocumentServerApp extends StatelessWidget {
+  const MCPDocumentServerApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

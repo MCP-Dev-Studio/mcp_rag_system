@@ -1,3 +1,4 @@
+// File: mcp_document_client/lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,6 +6,7 @@ import 'package:logging/logging.dart';
 
 // Import services and models
 import 'services/client_service.dart';
+import 'models/client_config.dart';
 
 // Import screens
 import 'screens/client_home.dart';

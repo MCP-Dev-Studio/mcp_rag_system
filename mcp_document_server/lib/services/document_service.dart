@@ -84,10 +84,13 @@ class DocumentService {
     // Register OpenAI provider
     mcpLlm.registerProvider('openai', OpenAiProviderFactory());
 
-    // Create RetrievalManager
+    // Create RetrievalManager with vector store
+    final vectorStore = MemoryVectorStore();
+
     _retrievalManager = mcpLlm.createRetrievalManager(
       providerName: 'openai',
       documentStore: _documentStore,
+      vectorStore: vectorStore,
       config: LlmConfiguration(
         apiKey: apiKey,
         model: 'text-embedding-3-large',
@@ -107,10 +110,13 @@ class DocumentService {
     // Register Claude provider
     mcpLlm.registerProvider('claude', ClaudeProviderFactory());
 
-    // Create RetrievalManager
+    // Create RetrievalManager with vector store
+    final vectorStore = MemoryVectorStore();
+
     _retrievalManager = mcpLlm.createRetrievalManager(
       providerName: 'claude',
       documentStore: _documentStore,
+      vectorStore: vectorStore,
       config: LlmConfiguration(
         apiKey: apiKey,
         model: 'claude-3-sonnet-20240229',
@@ -145,10 +151,6 @@ class DocumentService {
       throw Exception('DocumentService not initialized');
     }
 
-    if (_retrievalManager == null) {
-      throw Exception('RetrievalManager not initialized');
-    }
-
     try {
       _logger.info('Adding document: $title');
 
@@ -166,8 +168,14 @@ class DocumentService {
         metadata: docMetadata,
       );
 
-      // Add document and generate embeddings
-      final docId = await _retrievalManager!.addDocument(document);
+      // Add document to document store
+      final docId = await _documentStore.addDocument(document);
+
+      // Generate embeddings if retrieval manager is available
+      if (_retrievalManager != null) {
+        await _retrievalManager!.addDocument(document);
+        _logger.info('Document embeddings generated');
+      }
 
       // Update document list
       await _loadDocuments();
@@ -202,6 +210,12 @@ class DocumentService {
       final result = await _documentStore.deleteDocument(id);
 
       if (result) {
+        // Also delete from vector store if retrieval manager is available
+        if (_retrievalManager != null) {
+          await _retrievalManager!.deleteDocument(id);
+          _logger.info('Document embeddings deleted');
+        }
+
         // Update document list
         await _loadDocuments();
         _logger.info('Document deleted: $id');
@@ -227,12 +241,10 @@ class DocumentService {
       throw Exception('DocumentService not initialized');
     }
 
-    if (_retrievalManager == null) {
-      throw Exception('RetrievalManager not initialized');
-    }
-
     try {
       _logger.info('Updating document: $id');
+
+// File: mcp_document_server/lib/services/document_service.dart (continued)
 
       // Retrieve existing document
       final document = _documentStore.getDocument(id);
@@ -256,9 +268,16 @@ class DocumentService {
         metadata: updatedMetadata,
       );
 
-      // Delete and re-add document
+      // Update in document store
       await _documentStore.deleteDocument(id);
-      final docId = await _retrievalManager!.addDocument(updatedDocument);
+      final docId = await _documentStore.addDocument(updatedDocument);
+
+      // Update in vector store if retrieval manager is available
+      if (_retrievalManager != null) {
+        await _retrievalManager!.deleteDocument(id);
+        await _retrievalManager!.addDocument(updatedDocument);
+        _logger.info('Document embeddings updated');
+      }
 
       // Update document list
       await _loadDocuments();
@@ -382,22 +401,26 @@ class DocumentService {
       // Extract documents
       final List<dynamic> docData = backupData['documents'];
 
-      // Delete existing documents (optional)
+      // Clear existing documents
       int restoredCount = 0;
 
       // Add new documents
-      if (_retrievalManager != null) {
-        for (final data in docData) {
-          try {
-            // Create Document object
-            final doc = Document.fromJson(data);
+      for (final data in docData) {
+        try {
+          // Create Document object
+          final doc = Document.fromJson(data);
 
-            // Add document
+          // Add document
+          await _documentStore.addDocument(doc);
+
+          // Add to vector store if retrieval manager is available
+          if (_retrievalManager != null) {
             await _retrievalManager!.addDocument(doc);
-            restoredCount++;
-          } catch (e) {
-            _logger.warning('Error restoring document: $e');
           }
+
+          restoredCount++;
+        } catch (e) {
+          _logger.warning('Error restoring document: $e');
         }
       }
 
@@ -415,6 +438,8 @@ class DocumentService {
 
   // Resource cleanup
   void dispose() {
+    _logger.info('Disposing DocumentService');
     _documentsStreamController.close();
+    _logger.info('DocumentService disposed');
   }
 }

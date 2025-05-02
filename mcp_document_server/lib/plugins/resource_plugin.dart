@@ -3,10 +3,7 @@ import 'package:logging/logging.dart';
 import 'package:mcp_llm/mcp_llm.dart' hide Logger;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// Provides server resources as an MCP_LLM plugin.
-///
-/// This plugin provides resources such as user guides and server information.
-/// It is registered as an MCP resource and can be accessed by clients.
+/// Resource provider plugin for MCP
 class ResourcePlugin extends BaseResourcePlugin {
   // Logger configuration
   final Logger _logger;
@@ -54,6 +51,8 @@ class ResourcePlugin extends BaseResourcePlugin {
       mimeType: 'text/markdown',
       content: _getApiExamples(),
     );
+
+    _logger.info('Initialized resources: ${_resources.keys.join(', ')}');
   }
 
   @override
@@ -96,9 +95,9 @@ class ResourcePlugin extends BaseResourcePlugin {
 
     // Add content based on MIME type
     if (resource.mimeType.startsWith('text/')) {
-      contents.add(McpTextContent(text: content));
+      contents.add(TextContent(text: content));
     } else if (resource.mimeType == 'application/json') {
-      contents.add(McpTextContent(text: content));
+      contents.add(TextContent(text: content));
     }
 
     _logger.info('Returning resource: ${resource.name}');

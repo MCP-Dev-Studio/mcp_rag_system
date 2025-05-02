@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Local imports
 import '../models/client_config.dart';
 import '../models/chat_message.dart';
-import '../services/client_service.dart';
 import '../widgets/chat_message_widget.dart';
 import '../widgets/connection_status_bar.dart';
 import 'settings_screen.dart';
@@ -111,7 +111,7 @@ class _ClientHomeState extends State<ClientHome> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 ListTile(
-                  leading: const Icon(Icons.disconnect_outlined),
+                  leading: const Icon(Icons.link_off),
                   title: const Text('Disconnect from server'),
                   onTap: () {
                     Navigator.pop(context);
@@ -535,7 +535,7 @@ class _ClientHomeState extends State<ClientHome> {
                 _isConnected
                     ? 'Connected to server. Start chatting!'
                     : 'Connect to a server to start chatting',
-                style: TextStyle(color: Colors.grey),
+                style: const TextStyle(color: Colors.grey),
               ),
             )
                 : ListView.builder(
@@ -582,4 +582,3 @@ class _ClientHomeState extends State<ClientHome> {
     );
   }
 }
-

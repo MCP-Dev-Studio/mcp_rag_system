@@ -1,13 +1,9 @@
-import 'dart:convert';
 import 'package:logging/logging.dart';
 import 'package:mcp_llm/mcp_llm.dart' hide Logger;
 
 import '../services/document_service.dart';
 
-/// Provides document management functionality as an MCP_LLM plugin.
-///
-/// This plugin offers features such as adding, retrieving, updating, and deleting documents.
-/// It is automatically registered as an MCP tool and accessible from the LLM.
+/// Document management plugin for MCP
 class DocumentPlugin extends BaseToolPlugin {
   // Dependencies
   final DocumentService documentService;
@@ -185,7 +181,7 @@ class DocumentPlugin extends BaseToolPlugin {
     }
   }
 
-  /// Tool for uploading a document
+  // Tool for uploading a document
   Future<LlmCallToolResult> _uploadDocument(Map<String, dynamic> arguments) async {
     final title = arguments['title'] as String;
     final content = arguments['content'] as String;
@@ -219,7 +215,7 @@ Content Length: ${content.length} characters
     ]);
   }
 
-  /// Tool for retrieving a document
+  // Tool for retrieving a document
   Future<LlmCallToolResult> _getDocument(Map<String, dynamic> arguments) async {
     final documentId = arguments['documentId'] as String;
 
@@ -277,7 +273,7 @@ ${document.content}
     ]);
   }
 
-  /// Tool for listing documents
+  // Tool for listing documents
   Future<LlmCallToolResult> _listDocuments(Map<String, dynamic> arguments) async {
     final limit = arguments['limit'] as int? ?? 10;
     final tags = arguments['tags'] as List<dynamic>? ?? [];
@@ -334,7 +330,7 @@ ${document.content}
     ]);
   }
 
-  /// Tool for deleting a document
+  // Tool for deleting a document
   Future<LlmCallToolResult> _deleteDocument(Map<String, dynamic> arguments) async {
     final documentId = arguments['documentId'] as String;
 
@@ -352,7 +348,7 @@ ${document.content}
     }
   }
 
-  /// Tool for updating a document
+  // Tool for updating a document
   Future<LlmCallToolResult> _updateDocument(Map<String, dynamic> arguments) async {
     final documentId = arguments['documentId'] as String;
     final title = arguments['title'] as String?;
@@ -390,7 +386,7 @@ ${tags != null ? 'Tags: ${tags.join(', ')}' : ''}
     }
   }
 
-  /// Tool for listing tags
+  // Tool for listing tags
   Future<LlmCallToolResult> _listDocumentTags(Map<String, dynamic> arguments) async {
     // Retrieve all tags
     final tags = documentService.getAllTags();
