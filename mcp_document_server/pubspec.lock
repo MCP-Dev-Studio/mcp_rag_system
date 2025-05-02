@@ -236,10 +236,10 @@ packages:
     dependency: "direct main"
     description:
       name: mcp_server
-      sha256: "3ad5bf2c835f08a61dfc50c92c631aefe8b56640188e6da41799263916d0d999"
+      sha256: d38d0181b1f4c7aa23bd5e3dfde82c2429124ecde71c793b53564d74e0509d53
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.8"
+    version: "0.1.9"
   meta:
     dependency: transitive
     description:

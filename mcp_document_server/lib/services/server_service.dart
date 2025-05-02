@@ -21,7 +21,6 @@ class ServerService {
 
   // MCP server-related instances
   Server? _mcpServer;
-  LlmServer? _llmServer;
 
   // MCP plugins
   DocumentPlugin? _documentPlugin;
@@ -167,16 +166,18 @@ class ServerService {
       );
       _log('Transport created on port $port');
       // 11. Set up session connection handlers
-      mcpServer.onNotification('session/connected', (params) {
-        final sessionId = params['sessionId'] as String;
+      // Listen for new connections
+      mcpServer.onConnect.listen((session) {
+        final sessionId = session.id;
         _connectedClients++;
         _sessionIds.add(sessionId);
         _log('Client connected: $sessionId');
         _updateStatus();
       });
 
-      mcpServer.onNotification('session/disconnected', (params) {
-        final sessionId = params['sessionId'] as String;
+      // Listen for disconnections
+      mcpServer.onDisconnect.listen((session) {
+        final sessionId = session.id;
         _connectedClients--;
         _sessionIds.remove(sessionId);
         _log('Client disconnected: $sessionId');
@@ -194,7 +195,6 @@ class ServerService {
 
       // 14. Save server state
       _mcpServer = mcpServer;
-      _llmServer = llmServer;
       _isRunning = true;
       _statusMessage = 'Server running on port $port';
       _updateStatus();
