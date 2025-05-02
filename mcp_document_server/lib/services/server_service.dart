@@ -1,8 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
-import 'dart:math' as math;
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
@@ -29,7 +26,7 @@ class ServerService {
   // MCP plugins
   DocumentPlugin? _documentPlugin;
   SearchPlugin? _searchPlugin;
-  ResourcePlugin? _resourcePlugin;
+  DocumentResourcePlugin? _resourcePlugin;
 
   // Document service
   DocumentService? _documentService;
@@ -144,7 +141,7 @@ class ServerService {
       // 7. Create plugins
       _documentPlugin = DocumentPlugin(documentService: _documentService!);
       _searchPlugin = SearchPlugin(documentService: _documentService!);
-      _resourcePlugin = ResourcePlugin();
+      _resourcePlugin = DocumentResourcePlugin();
       _log('Plugins created');
 
       // 8. Register plugins

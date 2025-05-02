@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:mcp_llm/mcp_llm.dart';
+import 'package:mcp_llm/mcp_llm.dart' hide Logger;
 
 class DocumentService {
   // Logger configuration

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:mcp_llm/mcp_llm.dart' hide Logger;
 
@@ -17,165 +18,81 @@ class DocumentPlugin extends BaseToolPlugin {
         name: 'document',
         version: '1.0.0',
         description: 'Document management plugin',
+        inputSchema: {
+          'type': 'object',
+          'properties': {
+            'operation': {
+              'type': 'string',
+              'enum': ['uploadDocument', 'getDocument', 'listDocuments', 'deleteDocument', 'updateDocument', 'listDocumentTags'],
+              'description': 'Operation to perform on documents'
+            },
+            'params': {
+              'type': 'object',
+              'description': 'Operation parameters',
+              'properties': {
+                'title': {
+                  'type': 'string',
+                  'description': 'Document title (for upload/update operations)'
+                },
+                'content': {
+                  'type': 'string',
+                  'description': 'Document content (for upload/update operations)'
+                },
+                'documentId': {
+                  'type': 'string',
+                  'description': 'Document ID (for get/delete/update operations)'
+                },
+                'tags': {
+                  'type': 'array',
+                  'items': {
+                    'type': 'string'
+                  },
+                  'description': 'Tags for the document (for upload/update operations)'
+                },
+                'author': {
+                  'type': 'string',
+                  'description': 'Author of the document (for upload/update operations)'
+                },
+                'limit': {
+                  'type': 'integer',
+                  'description': 'Maximum number of documents to return (for list operation)',
+                  'default': 10
+                }
+              }
+            }
+          },
+          'required': ['operation', 'params']
+        },
       );
 
   @override
-  List<LlmTool> getTools() {
-    return [
-      // Tool for adding a document
-      LlmTool(
-        name: 'uploadDocument',
-        description: 'Upload a new document to the knowledge base',
-        inputSchema: {
-          'type': 'object',
-          'properties': {
-            'title': {
-              'type': 'string',
-              'description': 'Document title',
-            },
-            'content': {
-              'type': 'string',
-              'description': 'Document content',
-            },
-            'tags': {
-              'type': 'array',
-              'items': {
-                'type': 'string',
-              },
-              'description': 'Tags for the document',
-            },
-            'author': {
-              'type': 'string',
-              'description': 'Author of the document',
-            },
-          },
-          'required': ['title', 'content'],
-        },
-      ),
-
-      // Tool for retrieving a document
-      LlmTool(
-        name: 'getDocument',
-        description: 'Get a document by ID',
-        inputSchema: {
-          'type': 'object',
-          'properties': {
-            'documentId': {
-              'type': 'string',
-              'description': 'ID of the document to retrieve',
-            },
-          },
-          'required': ['documentId'],
-        },
-      ),
-
-      // Tool for listing documents
-      LlmTool(
-        name: 'listDocuments',
-        description: 'List all documents in the knowledge base',
-        inputSchema: {
-          'type': 'object',
-          'properties': {
-            'limit': {
-              'type': 'integer',
-              'description': 'Maximum number of documents to return',
-              'default': 10,
-            },
-            'tags': {
-              'type': 'array',
-              'items': {
-                'type': 'string',
-              },
-              'description': 'Filter documents by tags',
-            },
-          },
-        },
-      ),
-
-      // Tool for deleting a document
-      LlmTool(
-        name: 'deleteDocument',
-        description: 'Delete a document from the knowledge base',
-        inputSchema: {
-          'type': 'object',
-          'properties': {
-            'documentId': {
-              'type': 'string',
-              'description': 'ID of the document to delete',
-            },
-          },
-          'required': ['documentId'],
-        },
-      ),
-
-      // Tool for updating a document
-      LlmTool(
-        name: 'updateDocument',
-        description: 'Update an existing document',
-        inputSchema: {
-          'type': 'object',
-          'properties': {
-            'documentId': {
-              'type': 'string',
-              'description': 'ID of the document to update',
-            },
-            'title': {
-              'type': 'string',
-              'description': 'New document title',
-            },
-            'content': {
-              'type': 'string',
-              'description': 'New document content',
-            },
-            'tags': {
-              'type': 'array',
-              'items': {
-                'type': 'string',
-              },
-              'description': 'New tags for the document',
-            },
-          },
-          'required': ['documentId'],
-        },
-      ),
-
-      // Tool for listing tags
-      LlmTool(
-        name: 'listDocumentTags',
-        description: 'List all tags used in documents',
-        inputSchema: {
-          'type': 'object',
-          'properties': {},
-        },
-      ),
-    ];
-  }
-
-  @override
-  Future<LlmCallToolResult> onExecuteTool(String toolName, Map<String, dynamic> arguments) async {
-    _logger.info('Executing tool: $toolName with arguments: $arguments');
+  Future<LlmCallToolResult> onExecute(Map<String, dynamic> arguments) async {
+    _logger.info('Executing document operation with arguments: $arguments');
 
     try {
-      switch (toolName) {
+      final operation = arguments['operation'] as String;
+      final params = arguments['params'] as Map<String, dynamic>;
+
+      switch (operation) {
         case 'uploadDocument':
-          return await _uploadDocument(arguments);
+          return await _uploadDocument(params);
         case 'getDocument':
-          return await _getDocument(arguments);
+          return await _getDocument(params);
         case 'listDocuments':
-          return await _listDocuments(arguments);
+          return await _listDocuments(params);
         case 'deleteDocument':
-          return await _deleteDocument(arguments);
+          return await _deleteDocument(params);
         case 'updateDocument':
-          return await _updateDocument(arguments);
+          return await _updateDocument(params);
         case 'listDocumentTags':
-          return await _listDocumentTags(arguments);
+          return await _listDocumentTags(params);
         default:
-          throw ToolExecutionError('Unknown tool: $toolName');
+          throw Exception('Unknown operation: $operation');
       }
     } catch (e, stackTrace) {
-      _logger.severe('Error executing tool $toolName: $e\n$stackTrace');
+      _logger.severe('Error executing document operation: $e\n$stackTrace');
       return LlmCallToolResult(
-        [LlmTextContent(text: 'Error executing tool $toolName: $e')],
+        [LlmTextContent(text: 'Error executing document operation: $e')],
         isError: true,
       );
     }

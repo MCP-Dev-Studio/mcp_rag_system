@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:math' as math;
 import 'package:logging/logging.dart';
 import 'package:mcp_llm/mcp_llm.dart' hide Logger;
@@ -26,133 +25,77 @@ class SearchPlugin extends BaseToolPlugin {
         super(
         name: 'search',
         version: '1.0.0',
-        description: 'Search and RAG capabilities plugin',
+        description: 'Search and RAG capabilities',
+        inputSchema: {
+          'type': 'object',
+          'properties': {
+            'operation': {
+              'type': 'string',
+              'enum': ['searchDocuments', 'summarizeDocuments', 'questionAnswering', 'findRelatedDocuments'],
+              'description': 'Search operation to perform'
+            },
+            'params': {
+              'type': 'object',
+              'description': 'Operation parameters',
+              'properties': {
+                'query': {
+                  'type': 'string',
+                  'description': 'Search query or question to answer'
+                },
+                'documentId': {
+                  'type': 'string',
+                  'description': 'Document ID for finding related documents'
+                },
+                'topK': {
+                  'type': 'integer',
+                  'description': 'Number of documents to retrieve',
+                  'default': 5
+                },
+                'summaryLength': {
+                  'type': 'string',
+                  'enum': ['short', 'medium', 'long'],
+                  'description': 'Length of the summary to generate',
+                  'default': 'medium'
+                },
+                'detailedAnswer': {
+                  'type': 'boolean',
+                  'description': 'Whether to provide a detailed answer with citations',
+                  'default': true
+                }
+              }
+            }
+          },
+          'required': ['operation', 'params']
+        },
       );
 
   @override
-  List<LlmTool> getTools() {
-    return [
-      // Document search tool
-      LlmTool(
-        name: 'searchDocuments',
-        description: 'Search for documents relevant to a query using vector search',
-        inputSchema: {
-          'type': 'object',
-          'properties': {
-            'query': {
-              'type': 'string',
-              'description': 'The search query',
-            },
-            'topK': {
-              'type': 'integer',
-              'description': 'Number of documents to retrieve',
-              'default': 5,
-            },
-          },
-          'required': ['query'],
-        },
-      ),
-
-      // Document summarization tool
-      LlmTool(
-        name: 'summarizeDocuments',
-        description: 'Generate a summary based on documents relevant to a query',
-        inputSchema: {
-          'type': 'object',
-          'properties': {
-            'query': {
-              'type': 'string',
-              'description': 'The search query',
-            },
-            'topK': {
-              'type': 'integer',
-              'description': 'Number of documents to retrieve',
-              'default': 5,
-            },
-            'summaryLength': {
-              'type': 'string',
-              'enum': ['short', 'medium', 'long'],
-              'description': 'Length of the summary',
-              'default': 'medium',
-            },
-          },
-          'required': ['query'],
-        },
-      ),
-
-      // Question answering tool
-      LlmTool(
-        name: 'questionAnswering',
-        description: 'Answer a question based on the knowledge base documents',
-        inputSchema: {
-          'type': 'object',
-          'properties': {
-            'question': {
-              'type': 'string',
-              'description': 'The question to answer',
-            },
-            'topK': {
-              'type': 'integer',
-              'description': 'Number of documents to retrieve',
-              'default': 5,
-            },
-            'detailedAnswer': {
-              'type': 'boolean',
-              'description': 'Whether to provide a detailed answer with citations',
-              'default': true,
-            },
-          },
-          'required': ['question'],
-        },
-      ),
-
-      // Find related documents tool
-      LlmTool(
-        name: 'findRelatedDocuments',
-        description: 'Find documents related to a specific document by ID',
-        inputSchema: {
-          'type': 'object',
-          'properties': {
-            'documentId': {
-              'type': 'string',
-              'description': 'ID of the reference document',
-            },
-            'topK': {
-              'type': 'integer',
-              'description': 'Number of related documents to retrieve',
-              'default': 3,
-            },
-          },
-          'required': ['documentId'],
-        },
-      ),
-    ];
-  }
-
-  @override
-  Future<LlmCallToolResult> onExecuteTool(String toolName, Map<String, dynamic> arguments) async {
-    _logger.info('Executing tool: $toolName with arguments: $arguments');
+  Future<LlmCallToolResult> onExecute(Map<String, dynamic> arguments) async {
+    _logger.info('Executing search operation with arguments: $arguments');
 
     // Clean expired cache entries
     _cleanExpiredCache();
 
     try {
-      switch (toolName) {
+      final operation = arguments['operation'] as String;
+      final params = arguments['params'] as Map<String, dynamic>;
+
+      switch (operation) {
         case 'searchDocuments':
-          return await _searchDocuments(arguments);
+          return await _searchDocuments(params);
         case 'summarizeDocuments':
-          return await _summarizeDocuments(arguments);
+          return await _summarizeDocuments(params);
         case 'questionAnswering':
-          return await _questionAnswering(arguments);
+          return await _questionAnswering(params);
         case 'findRelatedDocuments':
-          return await _findRelatedDocuments(arguments);
+          return await _findRelatedDocuments(params);
         default:
-          throw ToolExecutionError('Unknown tool: $toolName');
+          throw Exception('Unknown search operation: $operation');
       }
     } catch (e, stackTrace) {
-      _logger.severe('Error executing tool $toolName: $e\n$stackTrace');
+      _logger.severe('Error executing search operation: $e\n$stackTrace');
       return LlmCallToolResult(
-        [LlmTextContent(text: 'Error executing tool $toolName: $e')],
+        [LlmTextContent(text: 'Error executing search operation: $e')],
         isError: true,
       );
     }
@@ -275,7 +218,9 @@ class SearchPlugin extends BaseToolPlugin {
         query,
         topK: topK,
         useHybridSearch: true,
-        additionalInstructions: 'For the query: "$query", $lengthInstruction Include citations to the source documents when appropriate.',
+        generationParams: {
+          'instructions':  'For the query: "$query", $lengthInstruction Include citations to the source documents when appropriate.',
+        },
       );
 
       // Cache results
@@ -296,7 +241,7 @@ class SearchPlugin extends BaseToolPlugin {
 
   // Question answering tool
   Future<LlmCallToolResult> _questionAnswering(Map<String, dynamic> arguments) async {
-    final question = arguments['question'] as String;
+    final question = arguments['query'] as String;
     final topK = arguments['topK'] as int? ?? 5;
     final detailedAnswer = arguments['detailedAnswer'] as bool? ?? true;
 
@@ -330,7 +275,9 @@ class SearchPlugin extends BaseToolPlugin {
         question,
         topK: topK,
         useHybridSearch: true,
-        additionalInstructions: additionalInstructions,
+        generationParams: {
+          'instructions': additionalInstructions,
+        },
       );
 
       // Cache results
@@ -477,14 +424,13 @@ class SearchPlugin extends BaseToolPlugin {
     }
   }
 
-  // Invalidate all cache
+  // Methods to invalidate cache
   void invalidateCache() {
     _queryCache.clear();
     _cacheTimestamps.clear();
     _logger.info('Cache invalidated');
   }
 
-  // Invalidate cache for a specific query
   void invalidateCacheForQuery(String query) {
     final keysToRemove = _queryCache.keys
         .where((key) => key.contains(query))
