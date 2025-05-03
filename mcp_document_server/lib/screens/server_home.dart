@@ -3,8 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:logging/logging.dart';
-import 'package:mcp_llm/mcp_llm.dart' hide Logger;
+import 'package:mcp_llm/mcp_llm.dart';
 
 // Local imports
 import 'document_list_screen.dart';
@@ -18,7 +17,7 @@ import '../widgets/document_card.dart';
 import '../main.dart' show serverService;
 
 class ServerHome extends StatefulWidget {
-  const ServerHome({Key? key}) : super(key: key);
+  const ServerHome({super.key});
 
   @override
   State<ServerHome> createState() => _ServerHomeState();
@@ -143,7 +142,7 @@ class _ServerHomeState extends State<ServerHome> with SingleTickerProviderStateM
         _isLoadingDocuments = false;
       });
     } catch (e) {
-      _logger.severe('Error loading documents: $e');
+      _logger.error('Error loading documents: $e');
       setState(() {
         _isLoadingDocuments = false;
       });

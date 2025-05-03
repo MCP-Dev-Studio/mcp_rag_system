@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:logging/logging.dart';
+import 'package:mcp_llm/mcp_llm.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Local imports
@@ -8,7 +8,7 @@ import '../main.dart' show clientService;
 
 /// Screen for configuring client settings
 class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -61,7 +61,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      _logger.severe('Error loading settings: $e');
+      _logger.error('Error loading settings: $e');
 
       setState(() {
         _isLoading = false;
@@ -93,7 +93,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await prefs.setString('log_level', _logLevel);
 
       // Update log level
-      Logger.root.level = _getLogLevel(_logLevel);
+      Logger.setAllLevels(_getLogLevel(_logLevel));
 
       setState(() {
         _isLoading = false;
@@ -105,7 +105,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       }
     } catch (e) {
-      _logger.severe('Error saving settings: $e');
+      _logger.error('Error saving settings: $e');
 
       setState(() {
         _isLoading = false;
@@ -120,30 +120,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // Get log level from string
-  Level _getLogLevel(String levelName) {
+  LogLevel _getLogLevel(String levelName) {
     switch (levelName.toLowerCase()) {
-      case 'all':
-        return Level.ALL;
-      case 'finest':
-        return Level.FINEST;
-      case 'finer':
-        return Level.FINER;
-      case 'fine':
-        return Level.FINE;
-      case 'config':
-        return Level.CONFIG;
-      case 'info':
-        return Level.INFO;
+      case 'none':
+        return LogLevel.none;
+      case 'error':
+        return LogLevel.error;
       case 'warning':
-        return Level.WARNING;
-      case 'severe':
-        return Level.SEVERE;
-      case 'shout':
-        return Level.SHOUT;
-      case 'off':
-        return Level.OFF;
+        return LogLevel.warning;
+      case 'info':
+        return LogLevel.info;
+      case 'debug':
+        return LogLevel.debug;
+      case 'trace':
+        return LogLevel.trace;
       default:
-        return Level.INFO;
+        return LogLevel.none;
     }
   }
 
@@ -227,7 +219,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         }
       }
     } catch (e) {
-      _logger.severe('Error connecting to server: $e');
+      _logger.error('Error connecting to server: $e');
 
       setState(() {
         _isLoading = false;

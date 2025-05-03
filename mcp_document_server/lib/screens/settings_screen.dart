@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:mcp_llm/mcp_llm.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Global service instance
@@ -63,7 +63,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final prefs = await SharedPreferences.getInstance();
       _autoStart = prefs.getBool('auto_start_server') ?? false;
     } catch (e) {
-      _logger.severe('Error loading settings: $e');
+      _logger.error('Error loading settings: $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -99,7 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       // Note: Changes to dotenv variables won't persist to the .env file
       // In a real app, we would need to write to the .env file or use a different storage method
     } catch (e) {
-      _logger.severe('Error saving settings: $e');
+      _logger.error('Error saving settings: $e');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

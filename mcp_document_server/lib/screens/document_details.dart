@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mcp_llm/mcp_llm.dart' hide Logger;
-import 'package:logging/logging.dart';
+import 'package:mcp_llm/mcp_llm.dart';
 
 // Global service instance
 import '../main.dart' show serverService;
@@ -112,7 +111,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         }
       }
     } catch (e) {
-      _logger.severe('Error deleting document: $e');
+      _logger.error('Error deleting document: $e');
 
       setState(() {
         _isLoading = false;
@@ -189,7 +188,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         }
       }
     } catch (e) {
-      _logger.severe('Error updating document: $e');
+      _logger.error('Error updating document: $e');
 
       setState(() {
         _isLoading = false;
@@ -303,7 +302,7 @@ class _DocumentDetailsScreenState extends State<DocumentDetailsScreen> {
         );
       }
     } catch (e) {
-      _logger.severe('Error retrieving embeddings: $e');
+      _logger.error('Error retrieving embeddings: $e');
 
       setState(() {
         _isLoading = false;

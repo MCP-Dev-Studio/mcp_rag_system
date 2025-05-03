@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:logging/logging.dart';
+import 'package:mcp_llm/mcp_llm.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Local imports
@@ -394,7 +394,7 @@ class _ClientHomeState extends State<ClientHome> {
         _isProcessing = false;
       });
     } catch (e) {
-      _logger.severe('Error sending message: $e');
+      _logger.error('Error sending message: $e');
 
       setState(() {
         _isProcessing = false;

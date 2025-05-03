@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:mcp_client/mcp_client.dart' hide Logger;
-import 'package:logging/logging.dart';
+import 'package:mcp_client/mcp_client.dart';
 
 // Global service instance
 import '../main.dart' show clientService;
@@ -53,7 +52,7 @@ class _ToolListScreenState extends State<ToolListScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      _logger.severe('Error loading tools: $e');
+      _logger.error('Error loading tools: $e');
 
       setState(() {
         _tools = [];
@@ -77,10 +76,9 @@ class _ToolListScreenState extends State<ToolListScreen> {
     _paramControllers.clear();
 
     // Create controllers for each parameter
-    if (tool.inputSchema != null &&
-        tool.inputSchema!.containsKey('properties') &&
-        tool.inputSchema!['properties'] is Map) {
-      final properties = tool.inputSchema!['properties'] as Map;
+    if (tool.inputSchema.containsKey('properties') &&
+        tool.inputSchema['properties'] is Map) {
+      final properties = tool.inputSchema['properties'] as Map;
 
       for (final key in properties.keys) {
         _paramControllers[key.toString()] = TextEditingController();
@@ -147,7 +145,7 @@ class _ToolListScreenState extends State<ToolListScreen> {
         );
       }
     } catch (e) {
-      _logger.severe('Error executing tool: $e');
+      _logger.error('Error executing tool: $e');
 
       // Dismiss loading indicator
       if (mounted) {
@@ -247,13 +245,13 @@ class _ToolListScreenState extends State<ToolListScreen> {
           ),
 
           // Tool description
-          if (_selectedTool!.description != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              _selectedTool!.description!,
-              style: theme.textTheme.bodyMedium,
-            ),
-          ],
+          ...[
+          const SizedBox(height: 8),
+          Text(
+            _selectedTool!.description,
+            style: theme.textTheme.bodyMedium,
+          ),
+        ],
 
           const SizedBox(height: 16),
           const Divider(),

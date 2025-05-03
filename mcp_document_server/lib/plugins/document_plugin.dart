@@ -1,6 +1,5 @@
 import 'dart:async';
-import 'package:logging/logging.dart';
-import 'package:mcp_llm/mcp_llm.dart' hide Logger;
+import 'package:mcp_llm/mcp_llm.dart';
 
 import '../services/document_service.dart';
 
@@ -13,7 +12,7 @@ class DocumentPlugin extends BaseToolPlugin {
   DocumentPlugin({
     required this.documentService,
     Logger? logger,
-  }) : _logger = logger ?? Logger('DocumentPlugin'),
+  }) : _logger = logger ?? Logger.getLogger('DocumentPlugin'),
         super(
         name: 'document',
         version: '1.0.0',
@@ -90,7 +89,7 @@ class DocumentPlugin extends BaseToolPlugin {
           throw Exception('Unknown operation: $operation');
       }
     } catch (e, stackTrace) {
-      _logger.severe('Error executing document operation: $e\n$stackTrace');
+      _logger.error('Error executing document operation: $e\n$stackTrace');
       return LlmCallToolResult(
         [LlmTextContent(text: 'Error executing document operation: $e')],
         isError: true,

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:logging/logging.dart';
-import 'package:mcp_llm/mcp_llm.dart' hide Logger;
+import 'package:mcp_llm/mcp_llm.dart';
 
 import '../services/document_service.dart';
 
@@ -21,7 +20,7 @@ class SearchPlugin extends BaseToolPlugin {
   SearchPlugin({
     required this.documentService,
     Logger? logger,
-  }) : _logger = logger ?? Logger('SearchPlugin'),
+  }) : _logger = logger ?? Logger.getLogger('SearchPlugin'),
         super(
         name: 'search',
         version: '1.0.0',
@@ -93,7 +92,7 @@ class SearchPlugin extends BaseToolPlugin {
           throw Exception('Unknown search operation: $operation');
       }
     } catch (e, stackTrace) {
-      _logger.severe('Error executing search operation: $e\n$stackTrace');
+      _logger.error('Error executing search operation: $e\n$stackTrace');
       return LlmCallToolResult(
         [LlmTextContent(text: 'Error executing search operation: $e')],
         isError: true,
@@ -232,7 +231,7 @@ class SearchPlugin extends BaseToolPlugin {
         LlmTextContent(text: response),
       ]);
     } catch (e) {
-      _logger.severe('Error generating summary: $e');
+      _logger.error('Error generating summary: $e');
       return LlmCallToolResult([
         LlmTextContent(text: 'Error generating summary: $e'),
       ], isError: true);
@@ -289,7 +288,7 @@ class SearchPlugin extends BaseToolPlugin {
         LlmTextContent(text: answer),
       ]);
     } catch (e) {
-      _logger.severe('Error answering question: $e');
+      _logger.error('Error answering question: $e');
       return LlmCallToolResult([
         LlmTextContent(text: 'Error answering question: $e'),
       ], isError: true);
@@ -380,7 +379,7 @@ class SearchPlugin extends BaseToolPlugin {
         LlmTextContent(text: resultStr),
       ]);
     } catch (e) {
-      _logger.severe('Error finding related documents: $e');
+      _logger.error('Error finding related documents: $e');
       return LlmCallToolResult([
         LlmTextContent(text: 'Error finding related documents: $e'),
       ], isError: true);

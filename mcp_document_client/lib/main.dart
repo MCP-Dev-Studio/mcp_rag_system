@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:logging/logging.dart';
 
 // Import services and models
 import 'services/client_service.dart';
@@ -17,9 +16,6 @@ late ClientService clientService;
 void main() async {
   // Initialize Flutter
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Set up logging
-  _setupLogging();
 
   // Load environment variables
   await dotenv.load(fileName: '.env');
@@ -47,44 +43,6 @@ void main() async {
 
   // Run the UI
   runApp(const MCPDocumentClientApp());
-}
-
-void _setupLogging() {
-  // Set log level
-  Logger.root.level = _getLogLevel(dotenv.env['LOG_LEVEL'] ?? 'info');
-
-  // Set up log listener
-  Logger.root.onRecord.listen((record) {
-    // ignore: avoid_print
-    print('${record.level.name}: ${record.time}: ${record.message}');
-  });
-}
-
-Level _getLogLevel(String levelName) {
-  switch (levelName.toLowerCase()) {
-    case 'all':
-      return Level.ALL;
-    case 'finest':
-      return Level.FINEST;
-    case 'finer':
-      return Level.FINER;
-    case 'fine':
-      return Level.FINE;
-    case 'config':
-      return Level.CONFIG;
-    case 'info':
-      return Level.INFO;
-    case 'warning':
-      return Level.WARNING;
-    case 'severe':
-      return Level.SEVERE;
-    case 'shout':
-      return Level.SHOUT;
-    case 'off':
-      return Level.OFF;
-    default:
-      return Level.INFO;
-  }
 }
 
 class MCPDocumentClientApp extends StatelessWidget {

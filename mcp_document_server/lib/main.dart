@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:mcp_llm/mcp_llm.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:logging/logging.dart';
 
 // Import local files
 import 'services/server_service.dart';
-import 'services/document_service.dart';
 import 'screens/server_home.dart';
 
 // Global service instances
@@ -29,39 +28,25 @@ void main() async {
 
 void _setupLogging() {
   // Set log level
-  Logger.root.level = _getLogLevel(dotenv.env['LOG_LEVEL'] ?? 'info');
-
-  // Set up log listener
-  Logger.root.onRecord.listen((record) {
-    // ignore: avoid_print
-    print('${record.level.name}: ${record.time}: ${record.message}');
-  });
+  Logger.setAllLevels(_getLogLevel(dotenv.env['LOG_LEVEL'] ?? 'info'));
 }
 
-Level _getLogLevel(String levelName) {
+LogLevel _getLogLevel(String levelName) {
   switch (levelName.toLowerCase()) {
-    case 'all':
-      return Level.ALL;
-    case 'finest':
-      return Level.FINEST;
-    case 'finer':
-      return Level.FINER;
-    case 'fine':
-      return Level.FINE;
-    case 'config':
-      return Level.CONFIG;
-    case 'info':
-      return Level.INFO;
+    case 'none':
+      return LogLevel.none;
+    case 'error':
+      return LogLevel.error;
     case 'warning':
-      return Level.WARNING;
-    case 'severe':
-      return Level.SEVERE;
-    case 'shout':
-      return Level.SHOUT;
-    case 'off':
-      return Level.OFF;
+      return LogLevel.warning;
+    case 'info':
+      return LogLevel.info;
+    case 'debug':
+      return LogLevel.debug;
+    case 'trace':
+      return LogLevel.trace;
     default:
-      return Level.INFO;
+      return LogLevel.none;
   }
 }
 

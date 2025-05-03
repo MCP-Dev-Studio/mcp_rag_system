@@ -1,12 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:logging/logging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// Import MCP client package
+// Import MCP client and MCP LLM packages
 import 'package:mcp_client/mcp_client.dart' hide Logger;
+import 'package:mcp_llm/mcp_llm.dart';
 
 // Local imports
 import '../models/client_config.dart';
@@ -14,7 +12,7 @@ import '../models/chat_message.dart';
 
 class ClientService {
   // Logger setup
-  final Logger _logger = Logger('ClientService');
+  final Logger _logger = Logger.getLogger('ClientService');
 
   // MCP client instance
   Client? _mcpClient;
@@ -137,8 +135,8 @@ class ClientService {
 
       return true;
     } catch (e, stackTrace) {
-      _logger.severe('Error connecting to server: $e');
-      _logger.severe('Stack trace: $stackTrace');
+      _logger.error('Error connecting to server: $e');
+      _logger.error('Stack trace: $stackTrace');
 
       _isConnected = false;
       _connectionStatus = 'Connection failed: $e';
@@ -178,7 +176,7 @@ class ClientService {
 
       _logger.info('Disconnected from server');
     } catch (e) {
-      _logger.severe('Error disconnecting from server: $e');
+      _logger.error('Error disconnecting from server: $e');
     }
   }
 
@@ -269,8 +267,8 @@ class ClientService {
         }
       }
     } catch (e, stackTrace) {
-      _logger.severe('Error sending message: $e');
-      _logger.severe('Stack trace: $stackTrace');
+      _logger.error('Error sending message: $e');
+      _logger.error('Stack trace: $stackTrace');
 
       // Add error message
       _addMessage(ChatMessage.error('Error sending message: $e'));
@@ -316,8 +314,8 @@ class ClientService {
         _addSystemMessage('Received empty response from the tool');
       }
     } catch (e, stackTrace) {
-      _logger.severe('Error executing tool: $e');
-      _logger.severe('Stack trace: $stackTrace');
+      _logger.error('Error executing tool: $e');
+      _logger.error('Stack trace: $stackTrace');
 
       // Add error message
       _addMessage(ChatMessage.error('Error executing tool $toolName: $e'));
@@ -351,8 +349,8 @@ class ClientService {
 
       throw Exception('Resource has no text content');
     } catch (e, stackTrace) {
-      _logger.severe('Error reading resource: $e');
-      _logger.severe('Stack trace: $stackTrace');
+      _logger.error('Error reading resource: $e');
+      _logger.error('Stack trace: $stackTrace');
       rethrow;
     }
   }

@@ -2,14 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:logging/logging.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:mcp_llm/mcp_llm.dart' hide Logger;
+import 'package:mcp_llm/mcp_llm.dart';
 
 class DocumentService {
   // Logger configuration
-  final Logger _logger = Logger('DocumentService');
+  final Logger _logger = Logger.getLogger('DocumentService');
 
   // Data storage-related objects
   final String _basePath;
@@ -68,8 +67,8 @@ class DocumentService {
       _isInitialized = true;
       _logger.info('DocumentService initialized with ${_documents.length} documents');
     } catch (e, stackTrace) {
-      _logger.severe('Error initializing DocumentService: $e');
-      _logger.severe('Stack trace: $stackTrace');
+      _logger.error('Error initializing DocumentService: $e');
+      _logger.error('Stack trace: $stackTrace');
       rethrow;
     }
   }
@@ -162,8 +161,8 @@ class DocumentService {
       _logger.info('Document added with ID: $docId');
       return docId;
     } catch (e, stackTrace) {
-      _logger.severe('Error adding document: $e');
-      _logger.severe('Stack trace: $stackTrace');
+      _logger.error('Error adding document: $e');
+      _logger.error('Stack trace: $stackTrace');
       rethrow;
     }
   }
@@ -204,7 +203,7 @@ class DocumentService {
 
       return result;
     } catch (e) {
-      _logger.severe('Error deleting document: $e');
+      _logger.error('Error deleting document: $e');
       return false;
     }
   }
@@ -264,7 +263,7 @@ class DocumentService {
       _logger.info('Document updated: $id');
       return docId;
     } catch (e) {
-      _logger.severe('Error updating document: $e');
+      _logger.error('Error updating document: $e');
       return null;
     }
   }
@@ -291,7 +290,7 @@ class DocumentService {
       _logger.info('Found ${results.length} documents for query: "$query"');
       return results;
     } catch (e) {
-      _logger.severe('Error searching documents: $e');
+      _logger.error('Error searching documents: $e');
       return [];
     }
   }
@@ -359,7 +358,7 @@ class DocumentService {
       _logger.info('Backup created at $backupFilePath with ${documents.length} documents');
       return backupFilePath;
     } catch (e) {
-      _logger.severe('Error creating backup: $e');
+      _logger.error('Error creating backup: $e');
       rethrow;
     }
   }
@@ -410,8 +409,8 @@ class DocumentService {
       _logger.info('Restored $restoredCount documents from backup');
       return restoredCount;
     } catch (e, stackTrace) {
-      _logger.severe('Error restoring from backup: $e');
-      _logger.severe('Stack trace: $stackTrace');
+      _logger.error('Error restoring from backup: $e');
+      _logger.error('Stack trace: $stackTrace');
       rethrow;
     }
   }
@@ -459,7 +458,7 @@ class DocumentService {
 
       _logger.info('Loaded ${_documents.length} documents');
     } catch (e) {
-      _logger.severe('Error loading documents: $e');
+      _logger.error('Error loading documents: $e');
     }
   }
 

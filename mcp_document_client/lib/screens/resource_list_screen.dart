@@ -1,8 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:mcp_client/mcp_client.dart' hide Logger;
-import 'package:logging/logging.dart';
+import 'package:mcp_client/mcp_client.dart';
 
 // Global service instance
 import '../main.dart' show clientService;
@@ -45,7 +44,7 @@ class _ResourceListScreenState extends State<ResourceListScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      _logger.severe('Error loading resources: $e');
+      _logger.error('Error loading resources: $e');
 
       setState(() {
         _resources = [];
@@ -77,7 +76,7 @@ class _ResourceListScreenState extends State<ResourceListScreen> {
         _isLoadingResource = false;
       });
     } catch (e) {
-      _logger.severe('Error loading resource content: $e');
+      _logger.error('Error loading resource content: $e');
 
       setState(() {
         _resourceContent = null;

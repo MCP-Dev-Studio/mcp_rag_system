@@ -1,13 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:logging/logging.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 
 // Import MCP server and MCP LLM packages
 import 'package:mcp_server/mcp_server.dart' hide Logger;
-import 'package:mcp_llm/mcp_llm.dart' hide Logger;
+import 'package:mcp_llm/mcp_llm.dart';
 
 // Local imports
 import '../plugins/document_plugin.dart';
@@ -17,7 +16,7 @@ import 'document_service.dart';
 
 class ServerService {
   // Logger configuration
-  final Logger _logger = Logger('ServerService');
+  final Logger _logger = Logger.getLogger('ServerService');
 
   // MCP server-related instances
   Server? _mcpServer;
